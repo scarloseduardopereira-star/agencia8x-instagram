@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — @agencia.8x</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:  #FF5722;
+      --accent2: #FF8A50;
+      --dark:    #0D0D1A;
+      --card:    #13131F;
+      --border:  #1E1E2E;
+      --text:    #E8E8F0;
+      --muted:   #6B6B80;
+      --green:   #22C55E;
+      --yellow:  #F59E0B;
+      --red:     #EF4444;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--card);
+      border-bottom: 3px solid var(--accent);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+    }
+    .logo-text { font-size: 18px; font-weight: 700; }
+    .logo-sub  { font-size: 12px; color: var(--muted); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .refresh-info { font-size: 12px; color: var(--muted); }
+    .btn-refresh {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: opacity .2s;
+    }
+    .btn-refresh:hover { opacity: .85; }
+
+    /* ── MAIN ── */
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    h2 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+
+    /* ── STATS ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 24px;
+    }
+    .stat-value { font-size: 42px; font-weight: 800; line-height: 1; }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .stat.orange .stat-value { color: var(--accent); }
+    .stat.green  .stat-value { color: var(--green); }
+    .stat.yellow .stat-value { color: var(--yellow); }
+    .stat.red    .stat-value { color: var(--red); }
+
+    /* ── POSTS ── */
+    .posts { display: flex; flex-direction: column; gap: 16px; }
+
+    .post-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 20px;
+      align-items: start;
+      transition: border-color .2s;
+    }
+    .post-card:hover { border-color: var(--accent); }
+    .post-card.publicado { border-left: 4px solid var(--green); }
+    .post-card.pendente  { border-left: 4px solid var(--yellow); }
+    .post-card.erro      { border-left: 4px solid var(--red); }
+
+    /* Thumbnails */
+    .thumbs {
+      display: flex;
+      gap: 4px;
+    }
+    .thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--border);
+    }
+    .thumb-more {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      background: var(--border);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* Post info */
+    .post-info { min-width: 0; }
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .post-date { font-size: 15px; font-weight: 700; }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .badge.publicado { background: #16532633; color: var(--green); }
+    .badge.pendente  { background: #78350f33; color: var(--yellow); }
+    .badge.erro      { background: #7f1d1d33; color: var(--red); }
+
+    .post-caption {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .post-extra { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .post-extra span { color: var(--accent); }
+
+    /* Right side */
+    .post-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .slides-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .post-link {
+      font-size: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .post-link:hover { text-decoration: underline; }
+
+    /* ── EMPTY ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+    /* ── LOADING ── */
+    .loading {
+      text-align: center;
+      padding: 80px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 48px;
+    }
+
+    @media (max-width: 600px) {
+      .post-card { grid-template-columns: 1fr; }
+      .thumbs { display: none; }
+      header { padding: 0 16px; }
+      main { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-badge">8X</div>
+    <div>
+      <div class="logo-text">Agência 8X</div>
+      <div class="logo-sub">Dashboard de publicações</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="refresh-info" id="lastUpdate">Carregando...</span>
+    <button class="btn-refresh" onclick="carregar()">↻ Atualizar</button>
+  </div>
+</header>
+
+<main>
+  <h2>Resumo</h2>
+  <div class="stats">
+    <div class="stat orange">
+      <div class="stat-value" id="total">—</div>
+      <div class="stat-label">Total de posts</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-value" id="publicados">—</div>
+      <div class="stat-label">Publicados</div>
+    </div>
+    <div class="stat yellow">
+      <div class="stat-value" id="pendentes">—</div>
+      <div class="stat-label">Agendados</div>
+    </div>
+    <div class="stat red">
+      <div class="stat-value" id="erros">—</div>
+      <div class="stat-label">Com erro</div>
+    </div>
+  </div>
+
+  <h2>Posts</h2>
+  <div class="posts" id="posts">
+    <div class="loading">
+      <div class="spinner"></div>
+      Carregando posts...
+    </div>
+  </div>
+</main>
+
+<footer>
+  @agencia.8x · Atualiza automaticamente a cada 60 segundos
+</footer>
+
+<script>
+const REPO_RAW = 'https://raw.githubusercontent.com/scarloseduardopereira-star/agencia8x-instagram/main/pendentes.json';
+
+function formatDate(str) {
+  const [date, time] = str.split(' ');
+  const [y, m, d] = date.split('-');
+  const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const dt = new Date(y, m-1, d);
+  return `${dias[dt.getDay()]}, ${d}/${m}/${y} às ${time}`;
+}
+
+function statusLabel(status) {
+  const map = { publicado: 'Publicado', pendente: 'Agendado', erro: 'Erro' };
+  return map[status] || status;
+}
+
+function renderThumbs(urls) {
+  if (!urls || !urls.length) return '<div class="thumb-more">sem img</div>';
+  const show = urls.slice(0, 3);
+  let html = show.map(u => `<img class="thumb" src="${u}" onerror="this.style.background='#1E1E2E';this.style.opacity='.4'">`).join('');
+  if (urls.length > 3) html += `<div class="thumb-more">+${urls.length - 3}</div>`;
+  return html;
+}
+
+async function carregar() {
+  try {
+    const res = await fetch(REPO_RAW + '?t=' + Date.now());
+    const posts = await res.json();
+
+    // Stats
+    document.getElementById('total').textContent = posts.length;
+    document.getElementById('publicados').textContent = posts.filter(p => p.status === 'publicado').length;
+    document.getElementById('pendentes').textContent  = posts.filter(p => p.status === 'pendente').length;
+    document.getElementById('erros').textContent      = posts.filter(p => p.status === 'erro').length;
+
+    // Sort: pendente primeiro, depois publicado, depois erro
+    const order = { pendente: 0, publicado: 1, erro: 2 };
+    posts.sort((a, b) => {
+      if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status];
+      return a.quando.localeCompare(b.quando);
+    });
+
+    // Render
+    const container = document.getElementById('posts');
+    if (!posts.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>Nenhum post agendado ainda.</div></div>';
+      return;
+    }
+
+    container.innerHTML = posts.map(p => `
+      <div class="post-card ${p.status}">
+        <div class="thumbs">${renderThumbs(p.image_urls)}</div>
+        <div class="post-info">
+          <div class="post-meta">
+            <span class="post-date">${formatDate(p.quando)}</span>
+            <span class="badge ${p.status}">${statusLabel(p.status)}</span>
+          </div>
+          <div class="post-caption">${p.caption.replace(/\n/g, ' ')}</div>
+          ${p.publicado_em ? `<div class="post-extra">Publicado em <span>${p.publicado_em}</span>${p.post_id ? ` · ID <span>${p.post_id}</span>` : ''}</div>` : ''}
+          ${p.erro ? `<div class="post-extra" style="color:var(--red)">Erro: ${p.erro}</div>` : ''}
+        </div>
+        <div class="post-actions">
+          <span class="slides-count">${p.image_urls ? p.image_urls.length : 0} slides</span>
+          ${p.post_id ? `<a class="post-link" href="https://www.instagram.com/agencia.8x/" target="_blank">Ver no Instagram ↗</a>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    // Timestamp
+    const agora = new Date();
+    document.getElementById('lastUpdate').textContent = `Atualizado às ${agora.getHours().toString().padStart(2,'0')}:${agora.getMinutes().toString().padStart(2,'0')}`;
+
+  } catch (e) {
+    document.getElementById('posts').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div>Erro ao carregar: ${e.message}</div></div>`;
+  }
+}
+
+carregar();
+setInterval(carregar, 60000); // auto-refresh a cada 60s
+</script>
+</body>
+</html>
