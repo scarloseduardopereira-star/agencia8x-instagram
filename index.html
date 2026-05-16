@@ -616,32 +616,46 @@ async function carregarAnalytics() {
   try {
     const res  = await fetch('/api/analytics?t=' + Date.now());
     const data = await res.json();
-    if (data.error) return;
 
-    // Perfil
-    document.getElementById('an-followers').textContent = fmt(data.profile.followers);
-    document.getElementById('an-posts').textContent     = data.profile.posts;
+    // Mostrar erro mas continuar renderizando o que tiver
+    if (data.error) {
+      console.warn('Analytics API:', data.error);
+      const errEl = document.getElementById('an-error');
+      if (errEl) errEl.textContent = 'Aviso: ' + data.error;
+      return;
+    }
+
+    // Perfil — sempre renderiza se existir
+    if (data.profile) {
+      document.getElementById('an-followers').textContent = fmt(data.profile.followers);
+      document.getElementById('an-posts').textContent     = data.profile.posts ?? '—';
+    }
 
     // Crescimento
-    const gb = document.getElementById('an-growth');
-    gb.innerHTML = growthBadge(data.growth.last7days, '7 dias') +
-                   growthBadge(data.growth.last30days, '30 dias');
+    if (data.growth) {
+      const gb = document.getElementById('an-growth');
+      if (gb) gb.innerHTML = growthBadge(data.growth.last7days, '7 dias') +
+                             growthBadge(data.growth.last30days, '30 dias');
+    }
 
-    // Insights
-    document.getElementById('an-impressions').textContent = fmt(data.insights.impressions);
-    document.getElementById('an-reach').textContent       = fmt(data.insights.reach);
-    document.getElementById('an-views').textContent       = fmt(data.insights.profile_views);
+    // Insights (podem ser zero em contas novas)
+    if (data.insights) {
+      document.getElementById('an-impressions').textContent = fmt(data.insights.impressions);
+      document.getElementById('an-reach').textContent       = fmt(data.insights.reach);
+      document.getElementById('an-views').textContent       = fmt(data.insights.profile_views);
+    }
 
     // Gráfico
     renderChart(data.history);
 
     // Dicas
-    document.getElementById('tips-list').innerHTML = TIPS.map(t =>
+    const tipsEl = document.getElementById('tips-list');
+    if (tipsEl) tipsEl.innerHTML = TIPS.map(t =>
       `<div class="tip"><span class="tip-icon">${t.icon}</span><span>${t.text}</span></div>`
     ).join('');
 
   } catch (e) {
-    console.warn('Analytics:', e.message);
+    console.warn('Analytics erro:', e.message);
   }
 }
 
