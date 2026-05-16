@@ -1,4 +1,15 @@
+function verificarAuth(req) {
+  const SENHA = process.env.DASHBOARD_PASSWORD;
+  if (!SENHA) return true; // sem senha configurada, libera
+  const esperado = Buffer.from(`${SENHA}:agencia8x-dashboard`).toString('base64');
+  const enviado  = req.headers['x-dashboard-token'] || req.query.auth || '';
+  return enviado === esperado;
+}
+
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  if (!verificarAuth(req)) return res.status(401).json({ error: 'Não autorizado' });
+
   const token = process.env.GITHUB_TOKEN;
   const repo  = 'scarloseduardopereira-star/agencia8x-instagram';
 
