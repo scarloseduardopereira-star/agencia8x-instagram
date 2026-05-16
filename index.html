@@ -528,6 +528,76 @@
       flex-wrap: wrap;
     }
 
+    /* ── LOGIN OVERLAY ── */
+    .login-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--dark);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-overlay.open { display: flex; }
+    .login-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    .login-logo {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 900;
+      font-size: 28px;
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+    }
+    .login-title { font-size: 22px; font-weight: 800; }
+    .login-sub   { font-size: 14px; color: var(--muted); margin-top: -16px; text-align: center; }
+    .login-form  { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .login-input {
+      width: 100%;
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .login-btn:hover { opacity: .88; }
+    .login-btn:disabled { opacity: .5; cursor: default; }
+    .login-error {
+      color: var(--red);
+      font-size: 13px;
+      text-align: center;
+      min-height: 18px;
+    }
+
     @media (max-width: 900px) {
       .analytics-grid { grid-template-columns: 1fr; }
       .insights-row { grid-template-columns: repeat(2, 1fr); }
@@ -546,6 +616,21 @@
   </style>
 </head>
 <body>
+
+<!-- ── LOGIN OVERLAY ── -->
+<div class="login-overlay open" id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">8X</div>
+    <div class="login-title">Agência 8X</div>
+    <div class="login-sub">Dashboard privado — acesso restrito</div>
+    <form class="login-form" onsubmit="fazerLogin(event)">
+      <input class="login-input" type="password" id="login-senha"
+             placeholder="Senha" autocomplete="current-password" autofocus>
+      <div class="login-error" id="login-erro"></div>
+      <button class="login-btn" type="submit" id="login-btn">Entrar</button>
+    </form>
+  </div>
+</div>
 
 <header>
   <div class="logo">
@@ -663,6 +748,73 @@
 </div>
 
 <script>
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+let _token = sessionStorage.getItem('dashboard_token') || '';
+
+function authHeaders() {
+  return _token ? { 'x-dashboard-token': _token } : {};
+}
+
+async function fazerLogin(e) {
+  e.preventDefault();
+  const senha = document.getElementById('login-senha').value.trim();
+  const btn   = document.getElementById('login-btn');
+  const erro  = document.getElementById('login-erro');
+  if (!senha) return;
+
+  btn.disabled   = true;
+  btn.textContent = 'Verificando...';
+  erro.textContent = '';
+
+  try {
+    const res  = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: senha })
+    });
+    const data = await res.json();
+    if (res.ok && data.token) {
+      _token = data.token;
+      sessionStorage.setItem('dashboard_token', _token);
+      document.getElementById('login-overlay').classList.remove('open');
+      carregar();
+      carregarAnalytics();
+    } else {
+      erro.textContent = data.error || 'Senha incorreta';
+      document.getElementById('login-senha').value = '';
+      document.getElementById('login-senha').focus();
+    }
+  } catch {
+    erro.textContent = 'Erro de conexão. Tente novamente.';
+  }
+
+  btn.disabled    = false;
+  btn.textContent = 'Entrar';
+}
+
+function verificarSessao() {
+  if (_token) {
+    fetch('/api/posts', { headers: authHeaders() }).then(r => {
+      if (r.status === 401) {
+        sessionStorage.removeItem('dashboard_token');
+        _token = '';
+        document.getElementById('login-overlay').classList.add('open');
+      } else {
+        document.getElementById('login-overlay').classList.remove('open');
+        carregar();
+        carregarAnalytics();
+      }
+    }).catch(() => {
+      // Sem conexão — tenta carregar mesmo assim
+      document.getElementById('login-overlay').classList.remove('open');
+      carregar();
+      carregarAnalytics();
+    });
+  } else {
+    document.getElementById('login-overlay').classList.add('open');
+  }
+}
+
 const REPO_RAW = '/api/posts';
 
 function formatDate(str) {
@@ -688,7 +840,7 @@ function renderThumbs(urls) {
 
 async function carregar() {
   try {
-    const res = await fetch(REPO_RAW + '?t=' + Date.now());
+    const res = await fetch(REPO_RAW + '?t=' + Date.now(), { headers: authHeaders() });
     const posts = await res.json();
 
     // Se a API retornou erro ao invés de array
@@ -759,7 +911,7 @@ async function carregarMetricas(post_id) {
   if (!el) return;
 
   try {
-    const res  = await fetch(`/api/insights?post_id=${post_id}&t=${Date.now()}`);
+    const res  = await fetch(`/api/insights?post_id=${post_id}&t=${Date.now()}`, { headers: authHeaders() });
     const data = await res.json();
 
     if (data.error || !data.metrics) {
@@ -844,7 +996,7 @@ function renderChart(history) {
 
 async function carregarAnalytics() {
   try {
-    const res  = await fetch('/api/analytics?t=' + Date.now());
+    const res  = await fetch('/api/analytics?t=' + Date.now(), { headers: authHeaders() });
     const data = await res.json();
 
     // Mostrar erro mas continuar renderizando o que tiver
@@ -967,8 +1119,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape')     fecharModal();
 });
 
-carregar();
-carregarAnalytics();
+// Inicia verificando sessão — só carrega dados se autenticado
+verificarSessao();
 setInterval(carregar, 60000);
 setInterval(carregarAnalytics, 300000);
 </script>
