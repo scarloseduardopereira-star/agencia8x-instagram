@@ -7,6 +7,13 @@ export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', '*');
 
+  const SENHA = process.env.DASHBOARD_PASSWORD;
+  if (SENHA) {
+    const esperado = Buffer.from(`${SENHA}:agencia8x-dashboard`).toString('base64');
+    const enviado  = req.headers['x-dashboard-token'] || req.query.auth || '';
+    if (enviado !== esperado) return res.status(401).json({ error: 'Não autorizado' });
+  }
+
   if (!TOKEN || !IG_ID) {
     return res.status(200).json({ error: 'Credenciais nao configuradas no Vercel' });
   }
