@@ -250,11 +250,109 @@
       margin-top: 48px;
     }
 
+    /* ── ANALYTICS ── */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .profile-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+    .followers-big {
+      font-size: 64px;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .followers-label { font-size: 13px; color: var(--muted); }
+    .growth-badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .growth-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .growth-badge.up   { background: #16532633; color: var(--green); }
+    .growth-badge.down { background: #7f1d1d33; color: var(--red); }
+    .growth-badge.flat { background: #1e293b;   color: var(--muted); }
+    .profile-stats { display: flex; gap: 24px; margin-top: 4px; }
+    .profile-stat-val  { font-size: 22px; font-weight: 800; }
+    .profile-stat-label { font-size: 11px; color: var(--muted); }
+
+    .insights-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .insights-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .insights-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .insight-box {
+      background: var(--dark);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .insight-val   { font-size: 28px; font-weight: 800; color: var(--text); }
+    .insight-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Gráfico de barras */
+    .chart-title { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+    .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+    .bar {
+      width: 100%;
+      background: var(--accent);
+      border-radius: 4px 4px 0 0;
+      min-height: 3px;
+      transition: height .3s;
+      opacity: .7;
+    }
+    .bar:hover { opacity: 1; }
+    .bar-label { font-size: 9px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
+    .bar-val   { font-size: 9px; color: var(--muted); margin-bottom: 2px; }
+
+    .tips-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 36px;
+    }
+    .tips-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .tips-list { display: flex; flex-direction: column; gap: 10px; }
+    .tip {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px;
+      background: var(--dark);
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .tip-icon { font-size: 18px; flex-shrink: 0; }
+    .tip strong { color: var(--accent); }
+
+    @media (max-width: 900px) {
+      .analytics-grid { grid-template-columns: 1fr; }
+      .insights-row { grid-template-columns: repeat(2, 1fr); }
+    }
     @media (max-width: 600px) {
       .post-card { grid-template-columns: 1fr; }
       .thumbs { display: none; }
       header { padding: 0 16px; }
       main { padding: 20px 16px; }
+      .insights-row { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -275,6 +373,36 @@
 </header>
 
 <main>
+  <h2>Crescimento do perfil</h2>
+  <div class="analytics-grid" id="analytics-grid">
+    <div class="profile-card">
+      <div class="followers-big" id="an-followers">—</div>
+      <div class="followers-label">seguidores</div>
+      <div class="growth-badges" id="an-growth"></div>
+      <div class="profile-stats">
+        <div>
+          <div class="profile-stat-val" id="an-posts">—</div>
+          <div class="profile-stat-label">posts</div>
+        </div>
+      </div>
+    </div>
+    <div class="insights-card">
+      <div class="insights-title">Últimos 30 dias</div>
+      <div class="insights-row">
+        <div class="insight-box"><div class="insight-val" id="an-impressions">—</div><div class="insight-label">Impressões</div></div>
+        <div class="insight-box"><div class="insight-val" id="an-reach">—</div><div class="insight-label">Alcance</div></div>
+        <div class="insight-box"><div class="insight-val" id="an-views">—</div><div class="insight-label">Visitas ao perfil</div></div>
+      </div>
+      <div class="chart-title">Seguidores — histórico</div>
+      <div class="bar-chart" id="an-chart"><span style="color:var(--muted);font-size:12px">Carregando gráfico...</span></div>
+    </div>
+  </div>
+
+  <div class="tips-card">
+    <div class="tips-title">Dicas para crescer organicamente</div>
+    <div class="tips-list" id="tips-list"></div>
+  </div>
+
   <h2>Resumo</h2>
   <div class="stats">
     <div class="stat orange">
@@ -443,8 +571,84 @@ async function carregarMetricas(post_id) {
   }
 }
 
+const TIPS = [
+  { icon: '🕐', text: '<strong>Poste nos melhores horários:</strong> terça a sexta das 10h às 12h e das 19h às 21h têm maior alcance orgânico.' },
+  { icon: '🔁', text: '<strong>Consistência é tudo:</strong> perfis que postam 3-5x por semana crescem até 3x mais rápido que os que postam esporadicamente.' },
+  { icon: '💬', text: '<strong>Responda comentários nas primeiras 2h:</strong> o algoritmo do Instagram impulsiona posts com alto engajamento inicial.' },
+  { icon: '#️⃣', text: '<strong>Use 5-10 hashtags relevantes:</strong> misture hashtags grandes (+1M), médias (100k–1M) e pequenas (-100k) para alcançar nichos certos.' },
+  { icon: '📖', text: '<strong>Carrosseis têm 3x mais alcance:</strong> o Instagram mostra carrosseis múltiplas vezes para o mesmo usuário aumentando o tempo de visualização.' },
+  { icon: '🤝', text: '<strong>Interaja com outros perfis do nicho:</strong> comentar em perfis parecidos atrai seguidores qualificados organicamente.' },
+  { icon: '📊', text: '<strong>Acompanhe o que funciona:</strong> analise quais posts têm mais salvamentos — esse é o melhor indicador de conteúdo de qualidade.' },
+];
+
+function fmt(n) {
+  if (n === undefined || n === null) return '—';
+  return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+}
+
+function growthBadge(val, label) {
+  const cls = val > 0 ? 'up' : val < 0 ? 'down' : 'flat';
+  const sign = val > 0 ? '+' : '';
+  return `<span class="growth-badge ${cls}">${sign}${val} ${label}</span>`;
+}
+
+function renderChart(history) {
+  const chart = document.getElementById('an-chart');
+  if (!history || history.length < 2) {
+    chart.innerHTML = '<span style="color:var(--muted);font-size:12px">Dados insuficientes — o gráfico aparece após alguns dias de uso.</span>';
+    return;
+  }
+
+  const max = Math.max(...history.map(h => h.followers), 1);
+  chart.innerHTML = history.map(h => {
+    const pct = Math.max((h.followers / max) * 100, 3);
+    const day = h.date.slice(8); // dia do mês
+    return `
+      <div class="bar-wrap" title="${h.date}: ${h.followers} seguidores">
+        <span class="bar-val">${h.followers > 0 ? h.followers : ''}</span>
+        <div class="bar" style="height:${pct}%"></div>
+        <span class="bar-label">${day}</span>
+      </div>`;
+  }).join('');
+}
+
+async function carregarAnalytics() {
+  try {
+    const res  = await fetch('/api/analytics?t=' + Date.now());
+    const data = await res.json();
+    if (data.error) return;
+
+    // Perfil
+    document.getElementById('an-followers').textContent = fmt(data.profile.followers);
+    document.getElementById('an-posts').textContent     = data.profile.posts;
+
+    // Crescimento
+    const gb = document.getElementById('an-growth');
+    gb.innerHTML = growthBadge(data.growth.last7days, '7 dias') +
+                   growthBadge(data.growth.last30days, '30 dias');
+
+    // Insights
+    document.getElementById('an-impressions').textContent = fmt(data.insights.impressions);
+    document.getElementById('an-reach').textContent       = fmt(data.insights.reach);
+    document.getElementById('an-views').textContent       = fmt(data.insights.profile_views);
+
+    // Gráfico
+    renderChart(data.history);
+
+    // Dicas
+    document.getElementById('tips-list').innerHTML = TIPS.map(t =>
+      `<div class="tip"><span class="tip-icon">${t.icon}</span><span>${t.text}</span></div>`
+    ).join('');
+
+  } catch (e) {
+    console.warn('Analytics:', e.message);
+  }
+}
+
 carregar();
+carregarAnalytics();
 setInterval(carregar, 60000);
+setInterval(carregarAnalytics, 300000); // analytics a cada 5 min
 </script>
 </body>
 </html>
