@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     {
       headers: {
         Authorization: `token ${token}`,
-        Accept: 'application/vnd.github.v3.raw',
+        Accept: 'application/vnd.github.v3+json',
       },
     }
   );
@@ -16,7 +16,12 @@ export default async function handler(req, res) {
     return res.status(response.status).json({ error: 'Erro ao buscar dados do GitHub' });
   }
 
-  const data = await response.json();
+  const file = await response.json();
+
+  // GitHub retorna o conteúdo em base64
+  const content = Buffer.from(file.content, 'base64').toString('utf-8');
+  const data = JSON.parse(content);
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.status(200).json(data);
 }
