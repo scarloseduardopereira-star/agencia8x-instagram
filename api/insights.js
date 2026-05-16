@@ -3,6 +3,15 @@ export default async function handler(req, res) {
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
   const API   = 'https://graph.facebook.com/v19.0';
 
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  const SENHA = process.env.DASHBOARD_PASSWORD;
+  if (SENHA) {
+    const esperado = Buffer.from(`${SENHA}:agencia8x-dashboard`).toString('base64');
+    const enviado  = req.headers['x-dashboard-token'] || req.query.auth || '';
+    if (enviado !== esperado) return res.status(401).json({ error: 'Não autorizado' });
+  }
+
   if (!post_id) return res.status(400).json({ error: 'post_id obrigatorio' });
   if (!token)   return res.status(500).json({ error: 'Token Instagram nao configurado' });
 
