@@ -314,6 +314,12 @@ async function carregar() {
     const res = await fetch(REPO_RAW + '?t=' + Date.now());
     const posts = await res.json();
 
+    // Se a API retornou erro ao invés de array
+    if (!Array.isArray(posts)) {
+      document.getElementById('posts').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div>Erro da API: ${JSON.stringify(posts)}</div></div>`;
+      return;
+    }
+
     // Stats
     document.getElementById('total').textContent = posts.length;
     document.getElementById('publicados').textContent = posts.filter(p => p.status === 'publicado').length;
