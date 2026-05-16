@@ -1,0 +1,4 @@
+.env
+slides/
+__pycache__/
+*.pyc
