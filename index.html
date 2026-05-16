@@ -343,9 +343,198 @@
     .tip-icon { font-size: 18px; flex-shrink: 0; }
     .tip strong { color: var(--accent); }
 
+    /* ── POST CARD clicável ── */
+    .post-card { cursor: pointer; }
+    .btn-ver {
+      font-size: 12px;
+      color: var(--accent);
+      background: transparent;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background .15s, color .15s;
+    }
+    .btn-ver:hover { background: var(--accent); color: #fff; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(6px);
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 960px;
+      max-height: 90vh;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* lado esquerdo — visualizador de imagem */
+    .modal-img-side {
+      background: #080810;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 460px;
+    }
+    .modal-main-img {
+      width: 100%;
+      height: 460px;
+      object-fit: contain;
+    }
+    .modal-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,.12);
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s;
+      backdrop-filter: blur(4px);
+    }
+    .modal-nav:hover { background: var(--accent); }
+    .modal-nav.prev { left: 12px; }
+    .modal-nav.next { right: 12px; }
+    .modal-nav:disabled { opacity: .25; cursor: default; }
+    .modal-nav:disabled:hover { background: rgba(255,255,255,.12); }
+
+    .modal-counter {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.6);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* thumbnails */
+    .modal-thumbs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 12px;
+      background: #0a0a14;
+      overflow-x: auto;
+      justify-content: center;
+    }
+    .modal-thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+      opacity: .5;
+      border: 2px solid transparent;
+      flex-shrink: 0;
+      transition: opacity .15s, border-color .15s;
+    }
+    .modal-thumb.active, .modal-thumb:hover { opacity: 1; border-color: var(--accent); }
+
+    /* lado direito — info */
+    .modal-info-side {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-left: 1px solid var(--border);
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-title { font-size: 15px; font-weight: 700; }
+    .modal-date  { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 0 4px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .modal-caption-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    .modal-caption-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .modal-caption {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .modal-metrics-wrap {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+    .modal-metrics-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .modal-metrics-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 900px) {
       .analytics-grid { grid-template-columns: 1fr; }
       .insights-row { grid-template-columns: repeat(2, 1fr); }
+      .modal { grid-template-columns: 1fr; max-height: 95vh; }
+      .modal-img-side { min-height: 280px; }
+      .modal-main-img { height: 280px; }
+      .modal-info-side { border-left: none; border-top: 1px solid var(--border); max-height: 320px; }
     }
     @media (max-width: 600px) {
       .post-card { grid-template-columns: 1fr; }
@@ -436,6 +625,43 @@
   @agencia.8x · Atualiza automaticamente a cada 60 segundos
 </footer>
 
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="fecharModalOverlay(event)">
+  <div class="modal" id="modal">
+    <!-- Lado esquerdo: imagem -->
+    <div class="modal-img-side">
+      <img class="modal-main-img" id="modal-img" src="" alt="Slide">
+      <button class="modal-nav prev" id="modal-prev" onclick="navModal(-1)">&#8592;</button>
+      <button class="modal-nav next" id="modal-next" onclick="navModal(1)">&#8594;</button>
+      <div class="modal-counter" id="modal-counter">1 / 1</div>
+    </div>
+
+    <!-- Lado direito: info -->
+    <div class="modal-info-side">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modal-status-badge"></div>
+          <div class="modal-date"  id="modal-date"></div>
+        </div>
+        <button class="modal-close" onclick="fecharModal()">&#x2715;</button>
+      </div>
+
+      <div class="modal-caption-wrap">
+        <div class="modal-caption-label">Legenda</div>
+        <div class="modal-caption" id="modal-caption"></div>
+      </div>
+
+      <div class="modal-metrics-wrap" id="modal-metrics-wrap" style="display:none">
+        <div class="modal-metrics-label">Desempenho</div>
+        <div class="modal-metrics-row" id="modal-metrics-row"></div>
+      </div>
+
+      <!-- Thumbnails -->
+      <div class="modal-thumbs" id="modal-thumbs"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 const REPO_RAW = '/api/posts';
 
@@ -491,8 +717,11 @@ async function carregar() {
       return;
     }
 
-    container.innerHTML = posts.map(p => `
-      <div class="post-card ${p.status}" id="card-${p.post_id || p.quando.replace(/\D/g,'')}">
+    // Guardar posts globalmente para o modal acessar
+    window._posts = posts;
+
+    container.innerHTML = posts.map((p, i) => `
+      <div class="post-card ${p.status}" id="card-${p.post_id || p.quando.replace(/\D/g,'')}" onclick="abrirModal(${i})">
         <div class="thumbs">${renderThumbs(p.image_urls)}</div>
         <div class="post-info">
           <div class="post-meta">
@@ -506,7 +735,8 @@ async function carregar() {
         </div>
         <div class="post-actions">
           <span class="slides-count">${p.image_urls ? p.image_urls.length : 0} slides</span>
-          ${p.post_id ? `<a class="post-link" href="https://www.instagram.com/agencia.8x/" target="_blank">Ver no Instagram ↗</a>` : ''}
+          <button class="btn-ver" onclick="event.stopPropagation(); abrirModal(${i})">Ver detalhes</button>
+          ${p.post_id ? `<a class="post-link" href="https://www.instagram.com/agencia.8x/" target="_blank" onclick="event.stopPropagation()">Ver no Instagram ↗</a>` : ''}
         </div>
       </div>
     `).join('');
@@ -659,10 +889,88 @@ async function carregarAnalytics() {
   }
 }
 
+// ── MODAL ────────────────────────────────────────────────────────────────────
+let _modalPost  = null;
+let _modalSlide = 0;
+
+function abrirModal(idx) {
+  const p = window._posts?.[idx];
+  if (!p) return;
+  _modalPost  = p;
+  _modalSlide = 0;
+
+  // Status + data
+  document.getElementById('modal-status-badge').innerHTML =
+    `<span class="badge ${p.status}">${statusLabel(p.status)}</span>`;
+  document.getElementById('modal-date').textContent = formatDate(p.quando);
+
+  // Legenda
+  document.getElementById('modal-caption').textContent = p.caption || '—';
+
+  // Métricas (se publicado)
+  const mWrap = document.getElementById('modal-metrics-wrap');
+  const mRow  = document.getElementById('modal-metrics-row');
+  if (p.post_id) {
+    mWrap.style.display = '';
+    const src = document.getElementById('metrics-' + p.post_id);
+    mRow.innerHTML = src ? src.innerHTML : '<span style="color:var(--muted);font-size:12px">Carregando...</span>';
+  } else {
+    mWrap.style.display = 'none';
+  }
+
+  // Thumbnails
+  const urls = p.image_urls || [];
+  document.getElementById('modal-thumbs').innerHTML = urls.map((u, i) =>
+    `<img class="modal-thumb${i === 0 ? ' active' : ''}" src="${u}" onclick="irSlide(${i})"
+          onerror="this.style.opacity='.2'">`
+  ).join('');
+
+  renderSlide(0);
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function fecharModalOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) fecharModal();
+}
+
+function renderSlide(idx) {
+  const urls = _modalPost?.image_urls || [];
+  if (!urls.length) return;
+  idx = Math.max(0, Math.min(idx, urls.length - 1));
+  _modalSlide = idx;
+
+  document.getElementById('modal-img').src = urls[idx];
+  document.getElementById('modal-counter').textContent = `${idx + 1} / ${urls.length}`;
+  document.getElementById('modal-prev').disabled = idx === 0;
+  document.getElementById('modal-next').disabled = idx === urls.length - 1;
+
+  // Highlight thumbnail ativa
+  document.querySelectorAll('.modal-thumb').forEach((t, i) =>
+    t.classList.toggle('active', i === idx)
+  );
+}
+
+function irSlide(idx)     { renderSlide(idx); }
+function navModal(dir)    { renderSlide(_modalSlide + dir); }
+
+// Teclado: ← → Esc
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('modal-overlay').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft')  navModal(-1);
+  if (e.key === 'ArrowRight') navModal(1);
+  if (e.key === 'Escape')     fecharModal();
+});
+
 carregar();
 carregarAnalytics();
 setInterval(carregar, 60000);
-setInterval(carregarAnalytics, 300000); // analytics a cada 5 min
+setInterval(carregarAnalytics, 300000);
 </script>
 </body>
 </html>
