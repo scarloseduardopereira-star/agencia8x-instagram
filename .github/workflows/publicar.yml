@@ -35,12 +35,14 @@ jobs:
         run: python scripts/publicador_actions.py
 
       - name: Salvar pendentes atualizados
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+  run: |
+    git config user.name "github-actions[bot]"
+    git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add pendentes.json
+    git pull --rebase origin main
 
-          git diff --staged --quiet || git commit -m "bot: atualiza status dos posts"
+    git add pendentes.json
 
-          git push
+    git diff --staged --quiet || git commit -m "bot: atualiza status dos posts"
+
+    git push origin main
