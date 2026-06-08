@@ -1,3 +1,5 @@
+export const config = { maxDuration: 60 };
+
 function verificarAuth(req) {
   const SENHA = process.env.DASHBOARD_PASSWORD;
   if (!SENHA) return true;
@@ -6,72 +8,96 @@ function verificarAuth(req) {
   return enviado === esperado;
 }
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method !== 'POST') return res.status(405).end();
   if (!verificarAuth(req)) return res.status(401).json({ error: 'Não autorizado' });
 
-  const { image_urls, caption } = req.body || {};
+  const { image_urls, caption, post_index } = req.body || {};
   if (!image_urls?.length) return res.status(400).json({ error: 'image_urls obrigatório' });
   if (!caption?.trim())    return res.status(400).json({ error: 'caption obrigatório' });
 
-  const GH   = process.env.GITHUB_TOKEN;
-  const REPO = 'scarloseduardopereira-star/agencia8x-instagram';
-  if (!GH) return res.status(500).json({ error: 'GITHUB_TOKEN não configurado' });
+  const TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN;
+  const IG_ID = process.env.INSTAGRAM_BUSINESS_ID;
+  const GH    = process.env.GITHUB_TOKEN;
+  const REPO  = 'scarloseduardopereira-star/agencia8x-instagram';
+  const API   = `https://graph.facebook.com/${process.env.META_API_VERSION || 'v19.0'}`;
 
-  // Horário BRT (UTC-3) 2 minutos atrás para garantir que o Action publique
-  const agora = new Date(Date.now() - 3 * 60 * 60 * 1000 - 2 * 60 * 1000);
-  const quando = agora.toISOString().slice(0, 16).replace('T', ' ');
+  if (!TOKEN || !IG_ID) return res.status(500).json({ error: 'Credenciais Instagram não configuradas' });
 
   try {
-    // 1. Ler pendentes.json
-    const fileRes = await fetch(`https://api.github.com/repos/${REPO}/contents/pendentes.json`, {
-      headers: { Authorization: `Bearer ${GH}`, Accept: 'application/vnd.github.v3+json', 'User-Agent': 'agencia8x' }
-    });
-    let posts = [], sha;
-    if (fileRes.ok) {
-      const f = await fileRes.json();
-      posts = JSON.parse(Buffer.from(f.content, 'base64').toString('utf-8'));
-      sha   = f.sha;
-    }
-
-    // 2. Adicionar post com data no passado
-    posts.push({ quando, image_urls, caption, status: 'pendente', criado_em: quando });
-
-    // 3. Salvar no GitHub
-    const putRes = await fetch(`https://api.github.com/repos/${REPO}/contents/pendentes.json`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${GH}`, Accept: 'application/vnd.github.v3+json', 'User-Agent': 'agencia8x', 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'bot: publicar agora',
-        content: Buffer.from(JSON.stringify(posts, null, 2)).toString('base64'),
-        ...(sha ? { sha } : {}),
-      }),
-    });
-    if (!putRes.ok) {
-      const err = await putRes.json();
-      return res.status(500).json({ error: `GitHub save: ${JSON.stringify(err)}` });
-    }
-
-    // 4. Disparar workflow_dispatch
-    const dispatchRes = await fetch(
-      `https://api.github.com/repos/${REPO}/actions/workflows/publicar.yml/dispatches`,
-      {
+    // 1. Criar containers (em paralelo)
+    const containerPromises = image_urls.map(url =>
+      fetch(`${API}/${IG_ID}/media`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${GH}`, Accept: 'application/vnd.github.v3+json', 'User-Agent': 'agencia8x', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ref: 'main' }),
-      }
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ access_token: TOKEN, image_url: url, is_carousel_item: 'true' }),
+      }).then(r => r.json()).then(d => {
+        if (!d.id) throw new Error(`Container falhou: ${JSON.stringify(d)}`);
+        return d.id;
+      })
     );
+    const containerIds = await Promise.all(containerPromises);
 
-    const dispatched = dispatchRes.status === 204;
-    return res.status(200).json({
-      ok: true,
-      quando,
-      dispatched,
-      msg: dispatched
-        ? 'Post adicionado e workflow disparado — publicação em ~1 minuto'
-        : 'Post adicionado (workflow_dispatch falhou — publicará no próximo ciclo de 5 min)',
+    // 2. Criar carrossel
+    const carRes = await fetch(`${API}/${IG_ID}/media`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ access_token: TOKEN, media_type: 'CAROUSEL', children: containerIds.join(','), caption }),
     });
+    const carData    = await carRes.json();
+    const carouselId = carData.id;
+    if (!carouselId) throw new Error(`Carrossel falhou: ${JSON.stringify(carData)}`);
+
+    // 3. Aguardar processamento
+    let pronto = false;
+    for (let i = 0; i < 10; i++) {
+      await sleep(4000);
+      const stRes  = await fetch(`${API}/${carouselId}?fields=status_code&access_token=${TOKEN}`);
+      const stData = await stRes.json();
+      if (stData.status_code === 'FINISHED') { pronto = true; break; }
+      if (stData.status_code === 'ERROR') throw new Error(`Processamento com erro: ${JSON.stringify(stData)}`);
+    }
+    if (!pronto) throw new Error('Timeout: carrossel demorou demais para processar');
+
+    // 4. Publicar
+    const pubRes  = await fetch(`${API}/${IG_ID}/media_publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ access_token: TOKEN, creation_id: carouselId }),
+    });
+    const pubData = await pubRes.json();
+    const postId  = pubData.id;
+    if (!postId) throw new Error(`Publicação falhou: ${JSON.stringify(pubData)}`);
+
+    // 5. Atualizar pendentes.json (marcar como publicado)
+    if (GH && post_index !== undefined) {
+      try {
+        const agora = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 16).replace('T', ' ');
+        const fileRes = await fetch(`https://api.github.com/repos/${REPO}/contents/pendentes.json`, {
+          headers: { Authorization: `Bearer ${GH}`, Accept: 'application/vnd.github.v3+json', 'User-Agent': 'agencia8x' }
+        });
+        if (fileRes.ok) {
+          const file  = await fileRes.json();
+          const posts = JSON.parse(Buffer.from(file.content, 'base64').toString('utf-8'));
+          if (posts[post_index]) {
+            posts[post_index].status       = 'publicado';
+            posts[post_index].post_id      = postId;
+            posts[post_index].publicado_em = agora;
+            delete posts[post_index].erro;
+            await fetch(`https://api.github.com/repos/${REPO}/contents/pendentes.json`, {
+              method: 'PUT',
+              headers: { Authorization: `Bearer ${GH}`, Accept: 'application/vnd.github.v3+json', 'User-Agent': 'agencia8x', 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: `dashboard: publicou post ${postId}`, content: Buffer.from(JSON.stringify(posts, null, 2)).toString('base64'), sha: file.sha }),
+            });
+          }
+        }
+      } catch {} // não falha se não conseguir atualizar o JSON
+    }
+
+    return res.status(200).json({ ok: true, post_id: postId, msg: 'Publicado com sucesso!' });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
