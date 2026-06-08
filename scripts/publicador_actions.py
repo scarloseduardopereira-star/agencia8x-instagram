@@ -1,99 +1,137 @@
 """
-publicador_actions.py — Versão para GitHub Actions.
-Lê pendentes.json, publica posts cujo horário já chegou,
-e atualiza o status no arquivo.
+publicador_actions.py — GitHub Actions.
+Publica carrosséis agendados no Instagram via Meta Graph API.
+Timezone: America/Maceio (UTC-3, sem horário de verão).
 """
 import os, sys, time, json, requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-IG_ID      = os.environ["INSTAGRAM_BUSINESS_ID"]
-PAGE_TOKEN = os.environ["INSTAGRAM_ACCESS_TOKEN"]
+# ── Credenciais ──────────────────────────────────────────────────────────────
+IG_ID      = os.environ.get("INSTAGRAM_BUSINESS_ID", "").strip()
+PAGE_TOKEN = os.environ.get("INSTAGRAM_ACCESS_TOKEN", "").strip()
 API_VER    = os.environ.get("META_API_VERSION", "v19.0")
 BASE_URL   = f"https://graph.facebook.com/{API_VER}"
 PENDENTES  = Path(__file__).parent.parent / "pendentes.json"
 
+# Timezone de Maceió (UTC-3, fixo)
+BRT = timezone(timedelta(hours=-3))
+
 
 def log(msg):
-    print(f"[{datetime.now().strftime('%d/%m %H:%M:%S')}] {msg}", flush=True)
+    print(f"[{datetime.now(BRT).strftime('%d/%m %H:%M:%S')}] {msg}", flush=True)
 
 
-def carregar():
-    if not PENDENTES.exists():
-        return []
-    with open(PENDENTES, encoding="utf-8") as f:
-        return json.load(f)
+def agora_brt() -> datetime:
+    return datetime.now(BRT).replace(tzinfo=None)  # naive BRT para comparar
 
 
-def salvar(posts):
-    with open(PENDENTES, "w", encoding="utf-8") as f:
-        json.dump(posts, f, indent=2, ensure_ascii=False)
+def validar():
+    erros = []
+    if not IG_ID:      erros.append("INSTAGRAM_BUSINESS_ID não definido")
+    if not PAGE_TOKEN: erros.append("INSTAGRAM_ACCESS_TOKEN não definido")
+    if erros:
+        for e in erros:
+            print(f"ERRO: {e}", flush=True)
+        sys.exit(1)
+
+    # Testa token ao vivo
+    r = requests.get(f"{BASE_URL}/{IG_ID}",
+        params={"fields": "username", "access_token": PAGE_TOKEN}, timeout=15)
+    d = r.json()
+    if "error" in d:
+        print(f"ERRO token Instagram: {d['error'].get('message', d)}", flush=True)
+        sys.exit(1)
+    log(f"Token válido — conta @{d.get('username', IG_ID)}")
 
 
 def create_container(image_url: str) -> str:
     r = requests.post(f"{BASE_URL}/{IG_ID}/media", data={
         "access_token": PAGE_TOKEN,
-        "image_url": image_url,
+        "image_url":    image_url,
         "is_carousel_item": "true",
     }, timeout=60)
     d = r.json()
     if "id" not in d:
-        raise RuntimeError(f"Container: {d}")
+        raise RuntimeError(f"create_container: {d}")
+    log(f"  Container criado: {d['id']}")
     return d["id"]
 
 
-def wait_ready(cid: str) -> bool:
-    for _ in range(12):
+def wait_ready(cid: str, tentativas: int = 15) -> bool:
+    for i in range(tentativas):
         r = requests.get(f"{BASE_URL}/{cid}",
-            params={"fields": "status_code", "access_token": PAGE_TOKEN}, timeout=15)
-        s = r.json().get("status_code", "")
-        if s == "FINISHED":
-            return True
+            params={"fields": "status_code,status", "access_token": PAGE_TOKEN},
+            timeout=15)
+        d = r.json()
+        s = d.get("status_code", "")
+        log(f"  Container {cid}: {s} ({i+1}/{tentativas})")
+        if s == "FINISHED": return True
         if s == "ERROR":
-            raise RuntimeError(f"Container com erro: {r.json()}")
-        time.sleep(5)
+            raise RuntimeError(f"Container ERROR: {d.get('status', d)}")
+        time.sleep(6)
     return False
 
 
-def publicar(post: dict) -> str:
+def publicar_post(post: dict) -> str:
     urls = post.get("image_urls", [])
     if not urls:
-        raise RuntimeError("Nenhuma URL de imagem encontrada no post.")
+        raise RuntimeError("image_urls vazio")
+    if len(urls) > 10:
+        raise RuntimeError(f"{len(urls)} imagens — máximo é 10")
 
-    log(f"Criando {len(urls)} containers...")
-    ids = [create_container(u) for u in urls]
+    log(f"  {len(urls)} imagens → criando containers...")
+    ids = []
+    for u in urls:
+        ids.append(create_container(u))
+        time.sleep(1)  # evita rate limit
 
+    log("  Montando carrossel...")
     r = requests.post(f"{BASE_URL}/{IG_ID}/media", data={
         "access_token": PAGE_TOKEN,
-        "media_type": "CAROUSEL",
-        "children": ",".join(ids),
-        "caption": post["caption"],
+        "media_type":   "CAROUSEL",
+        "children":     ",".join(ids),
+        "caption":      post["caption"],
     }, timeout=30)
-    carousel_id = r.json().get("id")
+    d = r.json()
+    carousel_id = d.get("id")
     if not carousel_id:
-        raise RuntimeError(f"Carrossel: {r.json()}")
+        raise RuntimeError(f"create_carousel: {d}")
+    log(f"  Carrossel: {carousel_id}")
 
+    log("  Aguardando processamento...")
     if not wait_ready(carousel_id):
-        raise RuntimeError("Timeout no processamento")
+        raise RuntimeError("Timeout no processamento do carrossel")
 
+    log("  Publicando...")
     r2 = requests.post(f"{BASE_URL}/{IG_ID}/media_publish", data={
         "access_token": PAGE_TOKEN,
-        "creation_id": carousel_id,
+        "creation_id":  carousel_id,
     }, timeout=30)
-    post_id = r2.json().get("id")
+    d2 = r2.json()
+    post_id = d2.get("id")
     if not post_id:
-        raise RuntimeError(f"Publicação: {r2.json()}")
+        raise RuntimeError(f"media_publish: {d2}")
     return post_id
 
 
 def main():
-    posts = carregar()
-    agora = datetime.now()
-    publicados = 0
-    modificado = False
+    validar()
 
-    pendentes = [p for p in posts if p.get("status") == "pendente"]
-    log(f"{len(pendentes)} post(s) pendente(s) de {len(posts)} total.")
+    if not PENDENTES.exists():
+        log("pendentes.json não encontrado — nada a fazer.")
+        return
+
+    with open(PENDENTES, encoding="utf-8") as f:
+        posts = json.load(f)
+
+    agora   = agora_brt()
+    total   = len(posts)
+    pend    = [p for p in posts if p.get("status") == "pendente"]
+    modif   = False
+    publis  = 0
+
+    log(f"{len(pend)} pendente(s) de {total} total — agora: {agora.strftime('%d/%m/%Y %H:%M')} BRT")
 
     for post in posts:
         if post.get("status") != "pendente":
@@ -101,32 +139,37 @@ def main():
 
         try:
             dt = datetime.strptime(post["quando"], "%Y-%m-%d %H:%M")
-        except Exception:
+        except Exception as e:
+            log(f"SKIP — data inválida '{post.get('quando')}': {e}")
             continue
 
         if agora < dt:
-            log(f"Aguardando: {post['quando']} (faltam {(dt - agora).seconds // 60} min)")
+            diff = int((dt - agora).total_seconds() // 60)
+            log(f"Aguardando '{post['quando']}' (faltam {diff} min)")
             continue
 
-        log(f"Publicando post de {post['quando']}...")
+        log(f">>> Publicando post de {post['quando']}...")
         try:
-            post_id = publicar(post)
-            post["status"] = "publicado"
-            post["post_id"] = post_id
+            post_id = publicar_post(post)
+            post["status"]       = "publicado"
+            post["post_id"]      = post_id
             post["publicado_em"] = agora.strftime("%Y-%m-%d %H:%M")
-            log(f"Publicado! Post ID: {post_id}")
-            publicados += 1
+            post.pop("erro", None)
+            log(f"    Publicado! Post ID: {post_id}")
+            publis += 1
         except Exception as e:
             post["status"] = "erro"
-            post["erro"] = str(e)
-            log(f"ERRO: {e}")
-        modificado = True
+            post["erro"]   = str(e)
+            log(f"    ERRO: {e}")
 
-    if modificado:
-        salvar(posts)
-        log("pendentes.json atualizado.")
+        modif = True
 
-    log(f"Concluido. {publicados} post(s) publicado(s) nessa execucao.")
+    if modif:
+        with open(PENDENTES, "w", encoding="utf-8") as f:
+            json.dump(posts, f, indent=2, ensure_ascii=False)
+        log("pendentes.json salvo.")
+
+    log(f"Concluído — {publis} post(s) publicado(s).")
 
 
 if __name__ == "__main__":
