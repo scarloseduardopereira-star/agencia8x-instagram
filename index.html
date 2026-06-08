@@ -1473,17 +1473,17 @@ async function postNow(idx, btn) {
   if (!confirm(`Publicar agora o post de ${p.quando}?`)) return;
 
   btn.disabled    = true;
-  btn.textContent = '⚡ Enviando...';
+  btn.textContent = '⚡ Publicando...';
 
   try {
     const r = await fetch('/api/publicar-agora', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ image_urls: p.image_urls, caption: p.caption }),
+      body: JSON.stringify({ image_urls: p.image_urls, caption: p.caption, post_index: idx }),
     });
     const d = await r.json();
     if (!d.ok) throw new Error(d.error);
-    btn.textContent      = '✓ Na fila!';
+    btn.textContent      = '✓ Publicado!';
     btn.style.background = '#16a34a';
     setTimeout(() => carregar(), 2500);
   } catch (e) {
@@ -1561,12 +1561,12 @@ async function retryPost(idx, btn) {
     const r = await fetch('/api/publicar-agora', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ image_urls: p.image_urls, caption: p.caption }),
+      body: JSON.stringify({ image_urls: p.image_urls, caption: p.caption, post_index: idx }),
     });
     const d = await r.json();
     if (!d.ok) throw new Error(d.error);
 
-    btn.textContent = '✓ Enviado!';
+    btn.textContent = '✓ Publicado!';
     btn.style.background = 'var(--green)';
     setTimeout(() => carregar(), 2000);
   } catch (e) {
