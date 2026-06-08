@@ -214,6 +214,93 @@
       font-weight: 600;
     }
     .post-link:hover { text-decoration: underline; }
+    .btn-post-now {
+      font-size: 12px;
+      color: #fff;
+      background: var(--green);
+      border: none;
+      border-radius: 8px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .btn-post-now:hover    { opacity: .8; }
+    .btn-post-now:disabled { opacity: .4; cursor: default; }
+
+    .btn-edit-date {
+      font-size: 12px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+    .btn-edit-date:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Modal editar data */
+    .edit-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .edit-overlay.open { display: flex; }
+    .edit-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .edit-box h3 { font-size: 16px; font-weight: 800; margin: 0; }
+    .edit-box p  { font-size: 13px; color: var(--muted); margin: 0; }
+    .edit-row    { display: flex; gap: 10px; }
+    .edit-row input {
+      flex: 1;
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    .edit-row input:focus { border-color: var(--accent); }
+    .edit-btns { display: flex; gap: 8px; justify-content: flex-end; }
+    .edit-cancel {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); padding: 8px 16px;
+      border-radius: 8px; cursor: pointer; font-size: 13px;
+    }
+    .edit-save {
+      background: var(--accent); border: none;
+      color: #fff; padding: 8px 20px;
+      border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 700;
+      transition: opacity .15s;
+    }
+    .edit-save:hover    { opacity: .85; }
+    .edit-save:disabled { opacity: .4; cursor: default; }
+    .edit-status { font-size: 12px; min-height: 16px; }
+    .edit-status.ok  { color: var(--green); }
+    .edit-status.err { color: var(--red); }
+
     .btn-retry {
       font-size: 12px;
       color: #fff;
@@ -973,6 +1060,23 @@
   @agencia.8x · Atualiza automaticamente a cada 60 segundos
 </footer>
 
+<!-- ── MODAL EDITAR DATA ── -->
+<div class="edit-overlay" id="edit-overlay" onclick="if(event.target===this) fecharEditarData()">
+  <div class="edit-box">
+    <h3>✎ Alterar data do post</h3>
+    <p id="edit-caption-preview"></p>
+    <div class="edit-row">
+      <input type="date" id="edit-data">
+      <input type="time" id="edit-hora">
+    </div>
+    <div class="edit-status" id="edit-status"></div>
+    <div class="edit-btns">
+      <button class="edit-cancel" onclick="fecharEditarData()">Cancelar</button>
+      <button class="edit-save"   id="edit-save" onclick="salvarEditarData()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL NOVO POST ── -->
 <div class="np-overlay" id="np-overlay" onclick="npFecharOverlay(event)">
   <div class="np-modal">
@@ -1204,6 +1308,10 @@ async function carregar() {
         <div class="post-actions">
           <span class="slides-count">${p.image_urls ? p.image_urls.length : 0} slides</span>
           <button class="btn-ver" onclick="event.stopPropagation(); abrirModal(${i})">Ver detalhes</button>
+          ${(p.status === 'pendente' || p.status === 'erro') ? `
+            <button class="btn-post-now" id="postnow-${i}" onclick="event.stopPropagation(); postNow(${i}, this)">⚡ Postar agora</button>
+            <button class="btn-edit-date" onclick="event.stopPropagation(); abrirEditarData(${i})">✎ Alterar data</button>
+          ` : ''}
           ${p.status === 'erro' ? `<button class="btn-retry" id="retry-${i}" onclick="event.stopPropagation(); retryPost(${i}, this)">↺ Tentar agora</button>` : ''}
           ${p.post_id ? `<a class="post-link" href="https://www.instagram.com/agencia.8x/" target="_blank" onclick="event.stopPropagation()">Ver no Instagram ↗</a>` : ''}
         </div>
@@ -1355,6 +1463,89 @@ async function carregarAnalytics() {
 
   } catch (e) {
     console.warn('Analytics erro:', e.message);
+  }
+}
+
+// ── POSTAR AGORA (card pendente) ─────────────────────────────────────────────
+async function postNow(idx, btn) {
+  const p = window._posts?.[idx];
+  if (!p) return;
+  if (!confirm(`Publicar agora o post de ${p.quando}?`)) return;
+
+  btn.disabled    = true;
+  btn.textContent = '⚡ Enviando...';
+
+  try {
+    const r = await fetch('/api/publicar-agora', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ image_urls: p.image_urls, caption: p.caption }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+    btn.textContent      = '✓ Na fila!';
+    btn.style.background = '#16a34a';
+    setTimeout(() => carregar(), 2500);
+  } catch (e) {
+    btn.disabled    = false;
+    btn.textContent = '⚡ Postar agora';
+    alert('Erro: ' + e.message);
+  }
+}
+
+// ── EDITAR DATA ───────────────────────────────────────────────────────────────
+let _editIdx = null;
+
+function abrirEditarData(idx) {
+  const p = window._posts?.[idx];
+  if (!p) return;
+  _editIdx = idx;
+
+  const [datePart, timePart] = p.quando.split(' ');
+  document.getElementById('edit-data').value = datePart;
+  document.getElementById('edit-hora').value = timePart || '10:00';
+  document.getElementById('edit-caption-preview').textContent = p.caption.slice(0, 80) + '...';
+  document.getElementById('edit-status').textContent = '';
+  document.getElementById('edit-status').className   = 'edit-status';
+  document.getElementById('edit-save').disabled = false;
+  document.getElementById('edit-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharEditarData() {
+  document.getElementById('edit-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  _editIdx = null;
+}
+
+async function salvarEditarData() {
+  const data   = document.getElementById('edit-data').value;
+  const hora   = document.getElementById('edit-hora').value;
+  const status = document.getElementById('edit-status');
+  const btn    = document.getElementById('edit-save');
+
+  if (!data || !hora) { status.className = 'edit-status err'; status.textContent = 'Preencha data e hora.'; return; }
+
+  const quando = `${data} ${hora}`;
+  btn.disabled = true;
+  status.className = 'edit-status';
+  status.textContent = 'Salvando...';
+
+  try {
+    const r = await fetch('/api/editar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ index: _editIdx, quando }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+    status.className = 'edit-status ok';
+    status.textContent = `✓ Reagendado para ${quando}`;
+    setTimeout(() => { fecharEditarData(); carregar(); }, 1500);
+  } catch (e) {
+    status.className = 'edit-status err';
+    status.textContent = 'Erro: ' + e.message;
+    btn.disabled = false;
   }
 }
 
