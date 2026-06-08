@@ -316,6 +316,20 @@
     .btn-retry:hover    { opacity: .8; }
     .btn-retry:disabled { opacity: .4; cursor: default; }
 
+    .btn-delete {
+      font-size: 12px;
+      color: var(--red);
+      background: transparent;
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+    .btn-delete:hover { background: var(--red); color: #fff; }
+
     /* ── EMPTY ── */
     .empty {
       text-align: center;
@@ -1313,6 +1327,7 @@ async function carregar() {
             <button class="btn-edit-date" onclick="event.stopPropagation(); abrirEditarData(${i})">✎ Alterar data</button>
           ` : ''}
           ${p.status === 'erro' ? `<button class="btn-retry" id="retry-${i}" onclick="event.stopPropagation(); retryPost(${i}, this)">↺ Tentar agora</button>` : ''}
+          ${(p.status === 'pendente' || p.status === 'erro') ? `<button class="btn-delete" onclick="event.stopPropagation(); deletarPost(${i}, this)">🗑 Apagar</button>` : ''}
           ${p.post_id ? `<a class="post-link" href="https://www.instagram.com/agencia.8x/" target="_blank" onclick="event.stopPropagation()">Ver no Instagram ↗</a>` : ''}
         </div>
       </div>
@@ -1572,6 +1587,31 @@ async function retryPost(idx, btn) {
   } catch (e) {
     btn.disabled    = false;
     btn.textContent = '↺ Tentar agora';
+    alert('Erro: ' + e.message);
+  }
+}
+
+// ── DELETAR POST ─────────────────────────────────────────────────────────────
+async function deletarPost(idx, btn) {
+  const p = window._posts?.[idx];
+  if (!p) return;
+  if (!confirm(`Apagar post agendado para ${p.quando}?\n\nEssa ação não pode ser desfeita.`)) return;
+
+  btn.disabled    = true;
+  btn.textContent = '🗑 Apagando...';
+
+  try {
+    const r = await fetch('/api/deletar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ index: idx }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+    carregar();
+  } catch (e) {
+    btn.disabled    = false;
+    btn.textContent = '🗑 Apagar';
     alert('Erro: ' + e.message);
   }
 }
