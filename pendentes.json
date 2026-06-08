@@ -55,19 +55,5 @@
     "criado_em": "2026-05-16 18:22",
     "post_id": "17892643332506828",
     "publicado_em": "2026-06-08 17:07"
-  },
-  {
-    "quando": "2026-05-30 10:00",
-    "image_urls": [
-      "https://files.catbox.moe/j6o9ds.png",
-      "https://files.catbox.moe/wjv740.png",
-      "https://files.catbox.moe/nueav1.png",
-      "https://files.catbox.moe/jwqsx2.png",
-      "https://files.catbox.moe/ylzif6.png"
-    ],
-    "caption": "Case de Sucesso: Dra. Stephanie Karolyne\n\nCirurgia-Dentista especialista em Odontologia Estetica e Harmonizacao Facial em Maceio, com site que transmite a sofisticacao e cuidado que seus pacientes merecem.\n\nO que entregamos:\n- Site elegante e humanizado\n- Pagina dedicada para cada procedimento\n- Galeria de resultados\n- Agendamento direto pelo WhatsApp\n\nResultado: 5,0 estrelas no Google, mais de 2.000 pacientes atendidos e presenca premium no digital.\n\nQuer um site profissional para sua clinica? Fale com a Agencia 8X!\n\n#odontologiaestetica #harmonizacaofacial #criarsites #agenciadigital #maceio #clinicaodontologica #siteresponsivo #agencia8x #casesucesso #marketingdigital #dentistamaceio",
-    "status": "erro",
-    "criado_em": "2026-05-16 18:22",
-    "erro": "create_container: {'error': {'message': 'Timeout', 'type': 'OAuthException', 'code': -2, 'error_subcode': 2207003, 'is_transient': False, 'error_user_title': 'Tempo limite atingido', 'error_user_msg': 'O download da mídia demora muito.', 'fbtrace_id': 'A_WfyZGiCQfgEl1LYrNpM8P'}}"
   }
 ]
