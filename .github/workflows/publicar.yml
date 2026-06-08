@@ -8,41 +8,45 @@ on:
 permissions:
   contents: write
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   publicar:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do repositório
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Instalar Python
+      - name: Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Instalar dependências
-        run: pip install requests python-dotenv
+      - name: Dependências
+        run: pip install requests
 
-      - name: Rodar publicador
+      - name: Validar secrets
+        env:
+          INSTAGRAM_BUSINESS_ID: ${{ secrets.INSTAGRAM_BUSINESS_ID }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$INSTAGRAM_BUSINESS_ID" ]; then echo "ERRO: INSTAGRAM_BUSINESS_ID vazio!"; exit 1; fi
+          if [ -z "$INSTAGRAM_ACCESS_TOKEN" ]; then echo "ERRO: INSTAGRAM_ACCESS_TOKEN vazio!"; exit 1; fi
+          echo "Secrets OK"
+
+      - name: Publicar posts
         env:
           INSTAGRAM_BUSINESS_ID: ${{ secrets.INSTAGRAM_BUSINESS_ID }}
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           META_API_VERSION: v19.0
+          TZ: America/Maceio
         run: python scripts/publicador_actions.py
 
-      - name: Salvar pendentes atualizados
+      - name: Salvar pendentes.json
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git pull --rebase origin main
-
           git add pendentes.json
-
-          git diff --staged --quiet || git commit -m "bot: atualiza status dos posts"
-
-          git push origin main
+          git diff --staged --quiet || git commit -m "bot: atualiza status dos posts [skip ci]"
+          git push
