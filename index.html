@@ -528,6 +528,254 @@
       flex-wrap: wrap;
     }
 
+    /* ── BTN NOVO POST ── */
+    .btn-novo {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: opacity .2s;
+    }
+    .btn-novo:hover { opacity: .85; }
+
+    /* ── MODAL NOVO POST ── */
+    .np-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 150;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(6px);
+    }
+    .np-overlay.open { display: flex; }
+    .np-modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 92vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .np-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px 18px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--card);
+      z-index: 2;
+      border-radius: 20px 20px 0 0;
+    }
+    .np-title { font-size: 17px; font-weight: 800; }
+    .np-close  { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; }
+    .np-close:hover { color: var(--text); }
+
+    .np-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 22px; }
+
+    .np-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    /* Upload area */
+    .np-upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .np-upload-area:hover, .np-upload-area.drag-over {
+      border-color: var(--accent);
+      background: #ff572210;
+    }
+    .np-upload-area input { display: none; }
+    .np-upload-icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* Preview imagens */
+    .np-previews {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .np-preview-item {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      overflow: visible;
+      cursor: grab;
+      border: 2px solid var(--border);
+      transition: border-color .15s;
+    }
+    .np-preview-item.drag-src { opacity: .4; }
+    .np-preview-item.drag-over-item { border-color: var(--accent); }
+    .np-preview-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      display: block;
+    }
+    .np-preview-num {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+    .np-preview-del {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: var(--red);
+      color: #fff;
+      font-size: 12px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      border: none;
+    }
+
+    /* Caption */
+    .np-caption {
+      width: 100%;
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 120px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    .np-caption:focus { border-color: var(--accent); }
+    .np-char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 4px; }
+    .np-char-count.warn { color: var(--yellow); }
+    .np-char-count.over { color: var(--red); }
+
+    /* Toggle publicar/agendar */
+    .np-toggle {
+      display: flex;
+      gap: 8px;
+    }
+    .np-toggle-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--dark);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+    .np-toggle-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .np-datetime {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .np-datetime input {
+      flex: 1;
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+      font-family: inherit;
+    }
+    .np-datetime input:focus { border-color: var(--accent); }
+
+    /* Footer */
+    .np-footer {
+      padding: 16px 28px 24px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      border-top: 1px solid var(--border);
+      position: sticky;
+      bottom: 0;
+      background: var(--card);
+      border-radius: 0 0 20px 20px;
+    }
+    .np-btn-cancel {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .np-btn-submit {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      padding: 10px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      min-width: 140px;
+      transition: opacity .2s;
+    }
+    .np-btn-submit:hover  { opacity: .88; }
+    .np-btn-submit:disabled { opacity: .4; cursor: default; }
+    .np-status {
+      font-size: 13px;
+      color: var(--muted);
+      align-self: center;
+      flex: 1;
+    }
+    .np-status.ok  { color: var(--green); }
+    .np-status.err { color: var(--red); }
+
     /* ── LOGIN OVERLAY ── */
     .login-overlay {
       display: none;
@@ -643,6 +891,7 @@
   <div class="header-right">
     <span class="refresh-info" id="lastUpdate">Carregando...</span>
     <button class="btn-refresh" onclick="carregar()">↻ Atualizar</button>
+    <button class="btn-novo" onclick="abrirNovoPost()">＋ Novo Post</button>
   </div>
 </header>
 
@@ -709,6 +958,59 @@
 <footer>
   @agencia.8x · Atualiza automaticamente a cada 60 segundos
 </footer>
+
+<!-- ── MODAL NOVO POST ── -->
+<div class="np-overlay" id="np-overlay" onclick="npFecharOverlay(event)">
+  <div class="np-modal">
+    <div class="np-header">
+      <div class="np-title">Novo Post</div>
+      <button class="np-close" onclick="fecharNovoPost()">✕</button>
+    </div>
+
+    <div class="np-body">
+      <!-- Imagens -->
+      <div>
+        <div class="np-label">Imagens do carrossel (2–10)</div>
+        <div class="np-upload-area" id="np-drop-area"
+             onclick="document.getElementById('np-file-input').click()"
+             ondragover="npDragOver(event)" ondragleave="npDragLeave(event)" ondrop="npDrop(event)">
+          <input type="file" id="np-file-input" multiple accept="image/*" onchange="npFilesAdded(this.files)">
+          <div class="np-upload-icon">🖼️</div>
+          <div>Clique ou arraste as imagens aqui</div>
+          <div style="font-size:12px;margin-top:4px">PNG, JPG — até 10 imagens — arraste para reordenar</div>
+        </div>
+        <div class="np-previews" id="np-previews"></div>
+      </div>
+
+      <!-- Caption -->
+      <div>
+        <div class="np-label">Legenda</div>
+        <textarea class="np-caption" id="np-caption" placeholder="Escreva a legenda do post..." maxlength="2200"
+                  oninput="npContarChars()"></textarea>
+        <div class="np-char-count" id="np-char-count">0 / 2200</div>
+      </div>
+
+      <!-- Quando publicar -->
+      <div>
+        <div class="np-label">Publicação</div>
+        <div class="np-toggle">
+          <button class="np-toggle-btn active" id="np-btn-agora" onclick="npModo('agora')">⚡ Publicar agora</button>
+          <button class="np-toggle-btn"        id="np-btn-agendar" onclick="npModo('agendar')">📅 Agendar para...</button>
+        </div>
+        <div class="np-datetime" id="np-datetime-row" style="display:none">
+          <input type="date" id="np-data" min="">
+          <input type="time" id="np-hora" value="10:00">
+        </div>
+      </div>
+    </div>
+
+    <div class="np-footer">
+      <span class="np-status" id="np-status"></span>
+      <button class="np-btn-cancel" onclick="fecharNovoPost()">Cancelar</button>
+      <button class="np-btn-submit" id="np-submit" onclick="npSubmit()">⚡ Publicar agora</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── MODAL ── -->
 <div class="modal-overlay" id="modal-overlay" onclick="fecharModalOverlay(event)">
@@ -1039,6 +1341,190 @@ async function carregarAnalytics() {
   } catch (e) {
     console.warn('Analytics erro:', e.message);
   }
+}
+
+// ── NOVO POST ────────────────────────────────────────────────────────────────
+let _npFiles   = [];   // {file, previewUrl, catboxUrl}
+let _npModo    = 'agora';
+let _npDragSrc = null;
+
+function abrirNovoPost() {
+  _npFiles = [];
+  _npModo  = 'agora';
+  document.getElementById('np-caption').value   = '';
+  document.getElementById('np-status').textContent = '';
+  document.getElementById('np-status').className   = 'np-status';
+  document.getElementById('np-file-input').value   = '';
+  document.getElementById('np-data').min = new Date().toISOString().slice(0, 10);
+  document.getElementById('np-data').value = new Date().toISOString().slice(0, 10);
+  npRenderPreviews();
+  npModo('agora');
+  document.getElementById('np-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function fecharNovoPost() {
+  document.getElementById('np-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function npFecharOverlay(e) {
+  if (e.target === document.getElementById('np-overlay')) fecharNovoPost();
+}
+
+function npModo(modo) {
+  _npModo = modo;
+  document.getElementById('np-btn-agora').classList.toggle('active', modo === 'agora');
+  document.getElementById('np-btn-agendar').classList.toggle('active', modo === 'agendar');
+  document.getElementById('np-datetime-row').style.display = modo === 'agendar' ? 'flex' : 'none';
+  document.getElementById('np-submit').textContent = modo === 'agora' ? '⚡ Publicar agora' : '📅 Agendar';
+}
+
+function npContarChars() {
+  const len = document.getElementById('np-caption').value.length;
+  const el  = document.getElementById('np-char-count');
+  el.textContent = `${len} / 2200`;
+  el.className   = 'np-char-count' + (len > 2000 ? ' warn' : '') + (len > 2200 ? ' over' : '');
+}
+
+// Upload de arquivos
+function npFilesAdded(files) {
+  const arr = Array.from(files);
+  const livre = 10 - _npFiles.length;
+  arr.slice(0, livre).forEach(file => {
+    const url = URL.createObjectURL(file);
+    _npFiles.push({ file, previewUrl: url, catboxUrl: null });
+  });
+  npRenderPreviews();
+}
+
+function npRenderPreviews() {
+  const c = document.getElementById('np-previews');
+  c.innerHTML = _npFiles.map((item, i) => `
+    <div class="np-preview-item" id="np-prev-${i}"
+         draggable="true"
+         ondragstart="npPrevDragStart(event,${i})"
+         ondragover="npPrevDragOver(event,${i})"
+         ondrop="npPrevDrop(event,${i})"
+         ondragend="npPrevDragEnd()">
+      <span class="np-preview-num">${i + 1}</span>
+      <img src="${item.previewUrl}" alt="slide ${i+1}">
+      <button class="np-preview-del" onclick="npRemover(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function npRemover(i) {
+  URL.revokeObjectURL(_npFiles[i].previewUrl);
+  _npFiles.splice(i, 1);
+  npRenderPreviews();
+}
+
+// Drag-and-drop para reordenar
+function npPrevDragStart(e, i) {
+  _npDragSrc = i;
+  document.getElementById(`np-prev-${i}`).classList.add('drag-src');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function npPrevDragOver(e, i) {
+  e.preventDefault();
+  document.querySelectorAll('.np-preview-item').forEach(el => el.classList.remove('drag-over-item'));
+  if (i !== _npDragSrc) document.getElementById(`np-prev-${i}`)?.classList.add('drag-over-item');
+}
+function npPrevDrop(e, i) {
+  e.preventDefault();
+  if (i === _npDragSrc || _npDragSrc === null) return;
+  const moved = _npFiles.splice(_npDragSrc, 1)[0];
+  _npFiles.splice(i, 0, moved);
+  npRenderPreviews();
+}
+function npPrevDragEnd() {
+  _npDragSrc = null;
+  document.querySelectorAll('.np-preview-item').forEach(el => el.classList.remove('drag-src','drag-over-item'));
+}
+
+// Drag-drop na área de upload
+function npDragOver(e)  { e.preventDefault(); document.getElementById('np-drop-area').classList.add('drag-over'); }
+function npDragLeave()  { document.getElementById('np-drop-area').classList.remove('drag-over'); }
+function npDrop(e)      { e.preventDefault(); npDragLeave(); npFilesAdded(e.dataTransfer.files); }
+
+// Upload para catbox via /api/upload
+async function npUploadImagem(item) {
+  if (item.catboxUrl) return item.catboxUrl;
+  const reader = new FileReader();
+  const b64 = await new Promise(res => { reader.onload = e => res(e.target.result.split(',')[1]); reader.readAsDataURL(item.file); });
+  const r = await fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ base64: b64, filename: item.file.name, mimeType: item.file.type }),
+  });
+  const d = await r.json();
+  if (!d.url) throw new Error(d.error || 'Upload falhou');
+  item.catboxUrl = d.url;
+  return d.url;
+}
+
+async function npSubmit() {
+  const caption = document.getElementById('np-caption').value.trim();
+  const status  = document.getElementById('np-status');
+  const btn     = document.getElementById('np-submit');
+
+  if (_npFiles.length < 2) { status.className = 'np-status err'; status.textContent = 'Mínimo 2 imagens para carrossel.'; return; }
+  if (_npFiles.length > 10){ status.className = 'np-status err'; status.textContent = 'Máximo 10 imagens.'; return; }
+  if (!caption)             { status.className = 'np-status err'; status.textContent = 'Escreva a legenda.'; return; }
+
+  if (_npModo === 'agendar') {
+    const data = document.getElementById('np-data').value;
+    const hora = document.getElementById('np-hora').value;
+    if (!data || !hora) { status.className = 'np-status err'; status.textContent = 'Selecione data e hora.'; return; }
+    const quando = `${data} ${hora}`;
+    if (quando <= new Date().toISOString().slice(0, 16).replace('T', ' ')) {
+      status.className = 'np-status err'; status.textContent = 'Data deve ser no futuro.'; return;
+    }
+  }
+
+  btn.disabled = true;
+  status.className = 'np-status';
+
+  try {
+    // 1. Upload das imagens
+    status.textContent = `Enviando imagens (0/${_npFiles.length})...`;
+    const image_urls = [];
+    for (let i = 0; i < _npFiles.length; i++) {
+      status.textContent = `Enviando imagens (${i+1}/${_npFiles.length})...`;
+      image_urls.push(await npUploadImagem(_npFiles[i]));
+    }
+
+    // 2. Publicar ou agendar
+    if (_npModo === 'agora') {
+      status.textContent = 'Adicionando à fila de publicação...';
+      const r = await fetch('/api/publicar-agora', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ image_urls, caption }),
+      });
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error);
+      status.className = 'np-status ok';
+      status.textContent = '✓ ' + d.msg;
+      setTimeout(() => { fecharNovoPost(); carregar(); }, 2500);
+    } else {
+      const quando = `${document.getElementById('np-data').value} ${document.getElementById('np-hora').value}`;
+      status.textContent = 'Agendando...';
+      const r = await fetch('/api/agendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ image_urls, caption, quando }),
+      });
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error);
+      status.className = 'np-status ok';
+      status.textContent = `✓ Agendado para ${quando}`;
+      setTimeout(() => { fecharNovoPost(); carregar(); }, 2000);
+    }
+  } catch (e) {
+    status.className = 'np-status err';
+    status.textContent = 'Erro: ' + e.message;
+  }
+  btn.disabled = false;
 }
 
 // ── MODAL ────────────────────────────────────────────────────────────────────
